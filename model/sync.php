@@ -12,6 +12,7 @@
  */
 include_once '../config.php';
 include_once '../helper/javascript_helper.php';
+include_once '../helper/log_helper.php';
 include_once '../lib/redbeanphp/rb.config.php';
 
 if (isset($_GET) && count($_GET) > 0) {
@@ -20,22 +21,30 @@ if (isset($_GET) && count($_GET) > 0) {
     // http://localhost/voc4fun/voc4fun-server/model/sync.php?uuid=1&timestamp=1448797722000
     
     if (isset($_GET["uuid"]) && isset($_GET["timestamp"])) {
-        $uuid = intval($_GET["uuid"]);        
-        $device_timestamp = intval($_GET["timestamp"]);
+        $uuid = $_GET["uuid"];
+        $device_timestamp = floatval($_GET["timestamp"]);
     }
     else {
         exit();
     }
     
     $log = R::getRow( 'SELECT timestamp FROM log '
-            . 'WHERE uuid = ? AND timestamp > ? LIMIT 1 '
-            . 'AND file_name = ? AND function_name = ?', [$uuid, $device_timestamp, "sync.php", "snyc_complete()"] );
+            . 'WHERE uuid = ? AND timestamp > ' . $device_timestamp
+            . 'AND file_name = ? AND function_name = ? '
+            . ' LIMIT 1 ', [$uuid, "db_log.js", "sync_complete()"] );
     
     if (count($log) === 0) {
         // push 模式 part 1: 送出server上最新的timestamp，等待手機回傳資料
-        $log = R::getRow( 'SELECT timestamp FROM log WHERE uuid = ? ORDER BY timestamp DESC LIMIT 1', [$uuid, $device_timestamp] );
+        $log = R::getRow( 'SELECT timestamp FROM log WHERE uuid = ? AND timestamp IS NOT NULL '
+                    . 'ORDER BY timestamp DESC LIMIT 1', [$uuid] );
+        
         if (count($log) > 0) {
-            $timestamp = $log[0]->timestamp;
+            $timestamp = $log["timestamp"];
+            $timestamp = floatval($timestamp);
+            //print_r($log);
+            if ($device_timestamp === $timestamp) {
+                $timestamp = true;
+            }
             jsonp_callback($timestamp);
         }
         else {
@@ -47,26 +56,51 @@ if (isset($_GET) && count($_GET) > 0) {
         // pull 模式: 直接回傳所有資料
         
         $last_sync_timestamp = $log[0]->timestamp;
-        $logs = R::getRow( 'SELECT * FROM log WHERE uuid = ? AND timestamp > ? ORDER BY timestamp ASC', [$uuid, $last_sync_timestamp] );
-        json_callback($logs);
+        $logs = R::getRow( 'SELECT timestamp, file_name, function_name, data FROM log '
+                . 'WHERE uuid = ? AND timestamp > ? '
+                . 'ORDER BY timestamp ASC', 
+                [$uuid, $last_sync_timestamp] );
+        
+        // 把裡面的data json_decode
+//        $logs = array();
+//        foreach ($raw_logs AS $log) {
+//            $los->data = json_decode($log->data);
+//            $logs[] = $log;
+//        }
+        jsonp_callback($logs);
+        
+        // 完成同步之後，要留下記錄
+        //sync_complete($uuid, "pull");
+        
         exit();
     }
 }
 else if (isset($_POST) && count($_POST) > 0) {
     // push 模式 part 2：從手機上傳送資料給伺服器
     if (isset($_POST["logs"]) && isset($_POST["uuid"])) {
-        $uuid = intval($_POST["uuid"]);
+        $uuid = $_POST["uuid"];
         $logs_ary = json_decode($_POST["logs"]);
     }
     else {
         exit();
     }
-    
-    $log_beans = R::dispense("log", count($logs_ary));
-    foreach ($logs_ary AS $i => $log) {
-        $log_beans[$i]->import($log);
-        $log_beans[$i]->uuid = $uuid;
+    //print_r($logs_ary);
+    if (count($logs_ary) > 1) { 
+        $log_beans = R::dispense("log", count($logs_ary));
+        foreach ($logs_ary AS $i => $log) {
+            $log_beans[$i]->uuid = $uuid;
+            $log_beans[$i]->import($log);
+        }
+        R::storeAll($log_beans);
     }
-    R::storeAll($log_beans);
+    else if (count($logs_ary) === 1) {  
+        $log_bean = R::dispense("log");
+        $log_bean->uuid = $uuid;
+        $log_bean->import($logs_ary);
+        R::store($log_bean);
+    }
+    
+    //sync_complete($uuid, "push");
+    
+    jsonp_callback(true);
 }
-
