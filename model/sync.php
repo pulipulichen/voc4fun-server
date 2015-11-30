@@ -15,6 +15,9 @@ include_once '../helper/javascript_helper.php';
 include_once '../helper/log_helper.php';
 include_once '../lib/redbeanphp/rb.config.php';
 
+$sync_file_name = "db_log.js";
+$sync_function_name = "sync_complete()";
+
 if (isset($_GET) && count($_GET) > 0) {
     // 查詢模式
     
@@ -28,10 +31,9 @@ if (isset($_GET) && count($_GET) > 0) {
         exit();
     }
     
-    $log = R::getRow( 'SELECT timestamp FROM log '
+    $log = R::getRow( 'SELECT file_name, function_name, timestamp FROM log '
             . 'WHERE uuid = ? AND timestamp > ' . $device_timestamp
-            . 'AND file_name = ? AND function_name = ? '
-            . ' LIMIT 1 ', [$uuid, "db_log.js", "sync_complete()"] );
+            . ' LIMIT 1 ', [$uuid] );
     
     if (count($log) === 0) {
         // push 模式 part 1: 送出server上最新的timestamp，等待手機回傳資料
@@ -54,19 +56,39 @@ if (isset($_GET) && count($_GET) > 0) {
     }
     else {
         // pull 模式: 直接回傳所有資料
+        if (count($log) > 1 && isset($log[0])) {
+            $log = $log[0];
+        }
         
-        $last_sync_timestamp = $log[0]->timestamp;
-        $logs = R::getRow( 'SELECT timestamp, file_name, function_name, data FROM log '
+        //$last_sync_timestamp = $log["timestamp"];
+        $last_sync_timestamp = $device_timestamp;
+        
+        $logs = R::getAll( 'SELECT timestamp, file_name, function_name, data FROM log '
                 . 'WHERE uuid = ? AND timestamp > ? '
                 . 'ORDER BY timestamp ASC', 
                 [$uuid, $last_sync_timestamp] );
         
-        // 把裡面的data json_decode
-//        $logs = array();
-//        foreach ($raw_logs AS $log) {
-//            $los->data = json_decode($log->data);
-//            $logs[] = $log;
-//        }
+//        print_r($logs);
+//        // 把裡面的data json_decode
+        foreach ($logs AS $i => $l) {
+            //echo floatval($l["timestamp"]);
+            $logs[$i]["timestamp"] = floatval($l["timestamp"]);
+        }
+        //for ($i = 0; $i < count($logs); $i++) {
+        //    $logs[$i]["timestamp"] = floatval($logs[$i]["timestamp"]);
+        //}
+        
+        
+        if (!($log["file_name"] === $sync_file_name 
+                && $log["function_name"] === $sync_function_name)) {
+            // match 模式：回傳需要比對的資料 (最新的資料不等於同步資料)
+            // @TODO match 模式 尚未完成
+        }
+        
+        if (is_null($logs)) {
+            $logs = array();
+        }
+        
         jsonp_callback($logs);
         
         // 完成同步之後，要留下記錄
@@ -84,7 +106,9 @@ else if (isset($_POST) && count($_POST) > 0) {
     else {
         exit();
     }
+    
     //print_r($logs_ary);
+    
     if (count($logs_ary) > 1) { 
         $log_beans = R::dispense("log", count($logs_ary));
         foreach ($logs_ary AS $i => $log) {
