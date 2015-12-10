@@ -38,15 +38,38 @@ if (function_exists("find_name") === FALSE) {
 // CREATE VIEW uuid_name AS SELECT l1.uuid, l1.data AS name FROM log AS l1, (SELECT uuid, max(timestamp) AS timestamp FROM log WHERE file_name = 'controller_profile.js' AND function_name = 'change_user_name()' GROUP BY uuid) AS l2 WHERE l1.uuid = l2.uuid AND l1.timestamp = l2.timestamp
 
 $views = array(
-    "uuid_name" => "CREATE VIEW uuid_name AS 
-SELECT l1.uuid, trim(both '\"' from l1.data) AS name 
-FROM log AS l1, (SELECT uuid, max(timestamp) AS timestamp FROM log WHERE file_name = 'controller_profile.js' AND function_name = 'change_user_name()' 
-GROUP BY uuid) AS l2 
-WHERE l1.uuid = l2.uuid AND l1.timestamp = l2.timestamp",
-    "note" => "CREATE VIEW note AS 
-SELECT l1.uuid, name, l1.qualifier AS q, l1.data::JSON->>'note' AS note, l1.timestamp 
-FROM log AS l1 JOIN uuid_name USING(uuid), (SELECT uuid, max(timestamp) AS timestamp, qualifier FROM log WHERE file_name = 'controller_note.js' AND function_name = 'submit()' GROUP BY uuid, qualifier) AS l2
-WHERE l1.uuid = l2.uuid AND l1.timestamp = l2.timestamp ORDER BY l1.timestamp DESC"
+    // VIEW: uuid_name
+    "uuid_name" => 'CREATE VIEW uuid_name AS 
+SELECT l1.uuid,
+    btrim(l1.data, \'"\'::text) AS name
+   FROM log l1,
+    ( SELECT max(log.id) AS id,
+            log.uuid,
+            max(log."timestamp") AS "timestamp"
+           FROM log
+          WHERE log.file_name = \'controller_profile.js\'::text AND log.function_name = \'change_user_name()\'::text
+          GROUP BY log.uuid) l2
+  WHERE l1.id = l2.id AND l1.uuid = l2.uuid AND l1."timestamp" = l2."timestamp";',
+    
+     // VIEW: note
+    "note" => 
+    'CREATE VIEW note AS 
+ SELECT l1.uuid,
+    uuid_name.name,
+    l1.qualifier AS q,
+    l1.data::json ->> \'note\'::text AS note,
+    l1."timestamp"
+   FROM log l1
+     JOIN uuid_name USING (uuid),
+    ( SELECT max(log.id) AS id,
+            log.uuid,
+            max(log."timestamp") AS "timestamp",
+            log.qualifier
+           FROM log
+          WHERE log.file_name = \'controller_note.js\'::text AND log.function_name = \'submit()\'::text
+          GROUP BY log.uuid, log.qualifier) l2
+  WHERE l1.id = l2.id AND l1.uuid = l2.uuid AND l1."timestamp" = l2."timestamp"
+  ORDER BY l1."timestamp" DESC;'
 );
 
 $exists = R::getRow("
