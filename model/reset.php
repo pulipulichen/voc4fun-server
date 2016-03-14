@@ -21,8 +21,12 @@ $views = array(
     "uuid_name"
 );
 foreach ($views AS $view_name) {
-    $sql = "DROP VIEW IF EXISTS " . $view_name;
-    R::exec($sql);
+    //$sql = "DROP VIEW IF EXISTS " . $view_name;
+	$sql = "DROP VIEW " . $view_name;
+	try {
+		R::exec($sql);
+	}
+	catch(Exception $e) {}
 }
 
 
@@ -30,6 +34,10 @@ $tables = array(
     "log"
 );
 foreach ($tables AS $table_name) {
-    $sql = "DROP TABLE IF EXISTS " . $table_name;
-    R::exec($sql);
+    //$sql = "DROP TABLE IF EXISTS " . $table_name;
+	$sql = "DROP TABLE " . $table_name;
+	try {
+		R::exec($sql);
+	}
+	catch (Exception $e) {}
 }
