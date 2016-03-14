@@ -26,11 +26,11 @@ if (function_exists("add_log") === false) {
     }
 }
 
-if (function_exists("find_name") === FALSE) {
-    function find_name($uuid) {
-        
-    }
-}
+//if (function_exists("find_name") === FALSE) {
+//    function find_name($uuid) {
+//        
+//    }
+//}
 
 // ----------------------------------------------
 
@@ -81,7 +81,7 @@ SELECT EXISTS(
       table_name = 'uuid_name'
 );");
 
-if (isset($exists["exists"]) && $exists["exists"] === false) {
+if (isset($exists["exists"]) === false || $exists["exists"] === false) {
     //echo "1";
     foreach ($views AS $sql) {
         //echo $sql;
