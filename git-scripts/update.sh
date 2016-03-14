@@ -1,6 +1,6 @@
 if [ -z "$KALS_BRANCH" ]; then KALS_BRANCH=origin/master; fi
-if [ -z "$KALS_DIR" ]; then KALS_DIR=/var/www; fi
-if [ -z "$KALS_PATH" ]; then KALS_PATH=/var/www/voc4fun-server; fi
+if [ -z "$KALS_DIR" ]; then KALS_DIR=/var/www/html; fi
+if [ -z "$KALS_PATH" ]; then KALS_PATH=/var/www/html/voc4fun-server; fi
 
 #echo $KALS_PATH
 if [ ! -d "$KALS_PATH" ]; then
