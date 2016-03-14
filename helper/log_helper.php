@@ -81,7 +81,7 @@ SELECT EXISTS(
       table_name = 'uuid_name'
 );");
 
-if ($exists["exists"] === false) {
+if (isset($exists["exists"]) && $exists["exists"] === false) {
     //echo "1";
     foreach ($views AS $sql) {
         //echo $sql;
