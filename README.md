@@ -15,3 +15,5 @@ http://localhost/voc4fun/voc4fun-server/phppgadmin/display.php?server=%3A5432%3A
 * PHP > 5.4
 * PostgreSQL > 9.1
 沒了，就這樣吧，可能是如此
+
+test
