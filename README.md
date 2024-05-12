@@ -6,6 +6,12 @@ A mobile application featuring a flashcard learning system with a self-regulatin
 
 ![](https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhFia79N9pZ9gakIfwRhpNSYB4OgXtv-fn3Rj0sjl76TIHVlbHyge0k3p1w2e_2qXkpvSOoi_SFGnxh8e2K3Dnq4PyHK6b1sytBtoWpVE-52mjWghX9skCjSgeQ_oZ7EHI30tCo9A/s1600/image%255B123%255D)
 
+## Technologies
+
+- PHP
+- PostgreSQL
+- RedBeanPHP: 不需首先設定表格的資料庫ORM
+
 ## Requirement / 伺服器需求
 * PHP > 5.4
 * PostgreSQL > 9.1
