@@ -19,6 +19,10 @@ A mobile application featuring a flashcard learning system with a self-regulatin
 * PostgreSQL > 9.1
 沒了，就這樣吧，可能是如此
 
+# Citation
+
+Chen, Y.-T. (2024). *Voc4fun-server* (20240518.204958) [Computer software]. Zenodo. [https://doi.org/10.5281/ZENODO.11214088](https://doi.org/10.5281/ZENODO.11214088)
+
 ----
 
 # Drafts
