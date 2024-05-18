@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/46725860.svg)](https://zenodo.org/doi/10.5281/zenodo.11214088)
+
 # voc4fun-server: 全民樂單字 伺服器端版本
 
 A mobile application featuring a flashcard learning system with a self-regulating learning mechanism. It dynamically adjusts daily goals based on the learner's progress.

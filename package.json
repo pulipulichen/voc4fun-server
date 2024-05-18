@@ -27,6 +27,7 @@
     "url": "https://github.com/pulipulichen/voc4fun-server/issues"
   },
   "homepage": "https://github.com/pulipulichen/voc4fun-server#readme",
+  "doi": "10.5281/zenodo.11214088",
   "devDependencies": {
   },
   "dependencies": {
